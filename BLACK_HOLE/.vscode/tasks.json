@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build OpenGL Project",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "main.cpp",
+        "-DGLEW_STATIC",
+        "-IC:/libs/glew-2.1.0/include",
+        "-IC:/libs/glfw-3.4/include",
+        "-LC:/libs/glew-2.1.0/lib",
+        "-LC:/libs/glfw-3.4/lib-mingw",
+        "-lglew32",
+        "-lglfw3",
+        "-lopengl32",
+        "-lgdi32",
+        "-o",
+        "main.exe"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"]
+    }
+  ]
+}
