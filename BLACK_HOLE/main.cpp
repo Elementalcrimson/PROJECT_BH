@@ -16,19 +16,21 @@ struct Ray {
 const int WIDTH = 800;
 const int HEIGHT = 600;
 const float BH_RADIUS = 50.0f;
-const float G = 500.0f; // attraction strength
+const float G = 2000.0f; // stronger gravity
 
+// gravitational acceleration
 void acceleration(float x, float y, float cx, float cy, float &ax, float &ay) {
     float dx = cx - x;
     float dy = cy - y;
     float distSq = dx*dx + dy*dy;
     float dist = std::sqrt(distSq);
     if (dist < BH_RADIUS) dist = BH_RADIUS;
-    float force = G / (distSq);
+    float force = G / distSq; // inverse square law
     ax = force * dx / dist;
     ay = force * dy / dist;
 }
 
+// Runge–Kutta 4th order
 void rk4(Ray &r, float dt, float cx, float cy) {
     float k1x, k1y, k1vx, k1vy;
     float k2x, k2y, k2vx, k2vy;
@@ -94,46 +96,47 @@ int main() {
     float cy = HEIGHT / 2.0f;
 
     std::vector<Ray> rays;
-    const int NUM_RAYS = 150;
+    const int NUM_RAYS = 200;
     for (int i = 0; i < NUM_RAYS; ++i) {
         float y = static_cast<float>(rand() % HEIGHT);
-        rays.push_back({0.0f, y, 5.0f + static_cast<float>(rand() % 30)/10.0f, 0.0f, 1.0f}); // faster
+        rays.push_back({0.0f, y, 8.0f + static_cast<float>(rand() % 50) / 10.0f, 0.0f, 1.0f}); // faster vx
     }
 
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.0f,0.0f,0.0f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw black hole
+        // Draw black hole (red circle)
         glColor3f(1.0f,0.0f,0.0f);
         glBegin(GL_TRIANGLE_FAN);
         glVertex2f(cx, cy);
-        for (int i=0;i<=100;i++){
+        for (int i=0; i<=100; i++){
             float angle = i*2.0f*3.1415926f/100;
             glVertex2f(cx + cos(angle)*BH_RADIUS, cy + sin(angle)*BH_RADIUS);
         }
         glEnd();
 
+        // Draw rays
         glBegin(GL_LINES);
         for (auto &r : rays) {
             float dist = std::hypot(r.x-cx, r.y-cy);
             if (dist <= BH_RADIUS) r.alpha = 0.0f;
 
             glColor4f(1.0f,1.0f,1.0f,r.alpha);
-            glVertex2f(r.x,r.y);
-            glVertex2f(r.x - r.vx*5, r.y - r.vy*5);
+            glVertex2f(r.x, r.y);
+            glVertex2f(r.x - r.vx*3, r.y - r.vy*3); // little tail
 
-            rk4(r, 0.1f, cx, cy);
-
-            r.alpha -= 0.0005f; // slower fade
+            rk4(r, 0.2f, cx, cy); // bigger dt = faster
+            r.alpha -= 0.0003f;   // slower fade
         }
         glEnd();
 
+        // Reset rays
         for (auto &r : rays) {
             if (r.x > WIDTH || r.alpha <= 0.0f || r.y < 0 || r.y > HEIGHT) {
                 r.x = 0.0f;
-                r.y = static_cast<float>(rand()%HEIGHT);
-                r.vx = 6.0f + static_cast<float>(rand() % 40)/10.0f; // faster
+                r.y = static_cast<float>(rand() % HEIGHT);
+                r.vx = 8.0f + static_cast<float>(rand() % 50) / 10.0f;
                 r.vy = 0.0f;
                 r.alpha = 1.0f;
             }
